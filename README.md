@@ -83,6 +83,10 @@ page documentation as well as shell auto-completion scripts.
 
 ...see the [INSTALL document](INSTALL.md) for more details.
 
+If you maintain a custom fork and want explicit instructions for validation,
+usage, and packaging publication (Homebrew + example alternative), see
+[FORK_BUILD_AND_PUBLISH.md](FORK_BUILD_AND_PUBLISH.md).
+
 ### Initialize an Unconfigured Repository
 
 transcrypt will interactively prompt you for the required information, all you
