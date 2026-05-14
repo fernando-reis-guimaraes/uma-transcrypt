@@ -305,7 +305,7 @@ SECRET_CONTENT_ENC="U2FsdGVkX1/6ilR0PmJpAyCF7iG3+k4aBwbgVd48WaQXznsg42nXbQrlWsf/
   run git config --get --local transcrypt.cipher
   [ "${lines[0]}" = "aes-256-cbc" ]
   run git config --get --local transcrypt.password
-  [ "${lines[0]}" = "abc 123" ]
+  [ "$status" -ne 0 ]
 
   run cat sensitive_file
   [ "$status" -eq 0 ]
@@ -320,7 +320,7 @@ SECRET_CONTENT_ENC="U2FsdGVkX1/6ilR0PmJpAyCF7iG3+k4aBwbgVd48WaQXznsg42nXbQrlWsf/
   run git config --get --local transcrypt.cipher
   [ "${lines[0]}" = "aes-256-cbc" ]
   run git config --get --local transcrypt.password
-  [ "${lines[0]}" = "abc 123" ]
+  [ "$status" -ne 0 ]
 
   # Check sensitive_file is unchanged after re-install
   run cat sensitive_file

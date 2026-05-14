@@ -33,7 +33,8 @@ SETUP_SKIP_INIT_TRANSCRYPT=1
 
   [ "$(git config --get transcrypt.version)" = "$VERSION" ]
   [ "$(git config --get transcrypt.cipher)" = "aes-256-cbc" ]
-  [ "$(git config --get transcrypt.password)" = "abc 123" ]
+  run git config --get transcrypt.password
+  [ "$status" -ne 0 ]
   [ "$(git config --get transcrypt.openssl-path)" = "openssl" ]
 
   # Use --git-common-dir if available (Git post Nov 2014) otherwise --git-dir
@@ -52,6 +53,17 @@ SETUP_SKIP_INIT_TRANSCRYPT=1
   [ "$(git config --get alias.ls-crypt)" = '!"$(git config transcrypt.crypt-dir 2>/dev/null || printf %s/crypt ""$(git rev-parse --git-common-dir)"")"/transcrypt --list' ]
 
   [ "$(git config --get alias.add-crypt)" = '!"$(git config transcrypt.crypt-dir 2>/dev/null || printf %s/crypt ""$(git rev-parse --git-common-dir)"")"/transcrypt --add' ]
+}
+
+@test "init: show details for --display prompts if TRANSCRYPT_PASSWORD is unset" {
+  init_transcrypt
+  VERSION=$(../transcrypt -v | awk '{print $2}')
+
+  run bash -c 'unset TRANSCRYPT_PASSWORD; printf "abc 123\n" | ../transcrypt --display'
+  [ "$status" -eq 0 ]
+  [[ "${output}" = *"The current repository was configured using transcrypt version $VERSION"* ]]
+  [[ "${output}" = *"  CIPHER:   aes-256-cbc"* ]]
+  [[ "${output}" = *"  PASSWORD: abc 123"* ]]
 }
 
 @test "init: show details for --display" {

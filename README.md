@@ -202,7 +202,7 @@ directory.
 
       -p, --password=PASSWORD
              the password to derive the key from;
-             defaults to 30 random base64 characters
+             defaults to TRANSCRYPT_PASSWORD envvar, else prompts
 
       --set-openssl-path=PATH_TO_OPENSSL
              use OpenSSL at this path; defaults to 'openssl' in $PATH

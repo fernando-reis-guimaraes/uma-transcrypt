@@ -65,6 +65,8 @@ function encrypt_named_file {
 
 function setup {
   pushd "$BATS_TEST_DIRNAME" || exit 1
+  export TRANSCRYPT_PASSWORD='abc 123'
+  export TRANSCRYPT_PASSWORD_SUPER_SECRET='321cba'
   init_git_repo
   if [[ ! "$SETUP_SKIP_INIT_TRANSCRYPT" ]]; then
     init_transcrypt
@@ -72,6 +74,8 @@ function setup {
 }
 
 function teardown {
+  unset TRANSCRYPT_PASSWORD
+  unset TRANSCRYPT_PASSWORD_SUPER_SECRET
   cleanup_all
   popd || exit 1
 }

@@ -34,20 +34,34 @@ readonly CONTEXT_REGEX='[a-z](-?[a-z0-9])*'
 ##### FUNCTIONS
 
 # load encryption password
-# by default is stored in git config, modify this function to move elsewhere
+# by default is loaded from TRANSCRYPT_PASSWORD env vars
 load_password() {
 	local context_config_group=${1:-}
-	local password
-	password=$(git config --get --local "transcrypt${context_config_group}.password")
+	local context_name=${context_config_group#.}
+	local context_envvar='TRANSCRYPT_PASSWORD'
+	local password=${TRANSCRYPT_PASSWORD:-}
+
+	# Prefer context-specific env var, falling back to TRANSCRYPT_PASSWORD
+	if [[ $context_name ]]; then
+		context_envvar="TRANSCRYPT_PASSWORD_$(echo "$context_name" | tr '[:lower:]-' '[:upper:]_')"
+		password=${!context_envvar:-$password}
+	fi
+
+	# Prompt only for direct transcrypt calls, not for git filter subprocesses
+	if [[ ! $password ]] && [[ ${ALLOW_PASSWORD_PROMPT:-} ]]; then
+		printf 'Password: ' >&2
+		read -r password
+		[[ $password ]] || die 1 'no password was specified; set %s or TRANSCRYPT_PASSWORD' "$context_envvar"
+	fi
+
+	[[ $password ]] || die 1 'no password was specified; set %s or TRANSCRYPT_PASSWORD' "$context_envvar"
 	echo "$password"
 }
 
 # save encryption password
-# by default is stored in git config, modify this function to move elsewhere
+# no-op: password is not persisted to git config
 save_password() {
-	local password=$1
-	local context_config_group=${2:-}
-	git config "transcrypt${context_config_group}.password" "$password"
+	:
 }
 
 # print a canonicalized absolute pathname
@@ -534,27 +548,20 @@ get_cipher() {
 
 # ensure we have a password to encrypt with
 get_password() {
-	while [[ ! $password ]]; do
-		local answer=
-		if [[ $interactive ]]; then
-			printf 'Generate a random password? [Y/n] '
-			read -r -n 1 -s answer
-			printf '\n'
-		fi
+	if [[ ! $password ]]; then
+		password=$(load_password "$CONTEXT_CONFIG_GROUP")
+	fi
+}
 
-		# generate a random password if the user answered yes;
-		# otherwise prompt the user for a password
-		if [[ $answer =~ $YES_REGEX ]] || [[ ! $answer ]]; then
-			local password_length=30
-			local random_base64
-			random_base64=$(${openssl_path} rand -base64 $password_length)
-			password=$random_base64
-		else
-			printf 'Password: '
-			read -r password
-			[[ $password ]] || printf 'no password was specified\n'
-		fi
-	done
+set_password_env_for_context() {
+	local password_value=$1
+	local context_config_group=${2:-}
+	local context_name=${context_config_group#.}
+	local context_envvar='TRANSCRYPT_PASSWORD'
+	if [[ $context_name ]]; then
+		context_envvar="TRANSCRYPT_PASSWORD_$(echo "$context_name" | tr '[:lower:]-' '[:upper:]_')"
+	fi
+	export "$context_envvar=$password_value"
 }
 
 # confirm the transcrypt configuration
@@ -1008,13 +1015,9 @@ upgrade_transcrypt() {
 	# Keep current cipher and password for each context
 	ORIG_CONFIGS=()
 	for context_name in $CONFIGURED_CONTEXTS; do
-		if [[ "$context_name" = 'default' ]]; then
-			cipher=$(git config --get --local transcrypt.cipher)
-			password=$(git config --get --local transcrypt.password)
-		else
-			cipher=$(git config --get --local transcrypt."${context_name}".cipher)
-			password=$(git config --get --local transcrypt."${context_name}".password)
-		fi
+		context_config_group=$(derive_context_config_group "$context_name")
+		cipher=$(git config --get --local "transcrypt${context_config_group}.cipher")
+		password=$(load_password "$context_config_group")
 		ORIG_CONFIGS+=("${context_name}|${cipher}|${password}")
 	done
 
@@ -1147,10 +1150,10 @@ import_gpg() {
 # Echo space-delimited list of context names defined in the git config
 get_contexts_from_git_config() {
 	config_names=$(git config --local --name-only --list | grep transcrypt)
-	extract_context_name_regex="transcrypt\.(${CONTEXT_REGEX}).password"
+	extract_context_name_regex="transcrypt\.(${CONTEXT_REGEX})\.cipher"
 	contexts=()
 	for name in $config_names; do
-		if [[ "$name" = "transcrypt.password" ]]; then
+		if [[ "$name" = "transcrypt.cipher" ]]; then
 			contexts+=('default')
 		elif [[ $name =~ $extract_context_name_regex ]]; then
 			contexts+=("${BASH_REMATCH[1]}")
@@ -1291,7 +1294,7 @@ help() {
 
 		     -p, --password=PASSWORD
 		            the password to derive the key from;
-		            defaults to 30 random base64 characters
+		            defaults to TRANSCRYPT_PASSWORD envvar, else prompts
 
 		     --set-openssl-path=PATH_TO_OPENSSL
 		            use OpenSSL at this path; defaults to 'openssl' in \$PATH
@@ -1449,6 +1452,7 @@ show_file=''
 uninstall=''
 upgrade=''
 openssl_path='openssl'
+ALLOW_PASSWORD_PROMPT='true'
 
 # used to bypass certain safety checks
 requires_existing_config=''
@@ -1458,26 +1462,31 @@ requires_clean_repo='true'
 while [[ "${1:-}" != '' ]]; do
 	case $1 in
 	clean)
+		ALLOW_PASSWORD_PROMPT=''
 		shift
 		git_clean "$@"
 		exit $?
 		;;
 	smudge)
+		ALLOW_PASSWORD_PROMPT=''
 		shift
 		git_smudge "$@"
 		exit $?
 		;;
 	textconv)
+		ALLOW_PASSWORD_PROMPT=''
 		shift
 		git_textconv "$@"
 		exit $?
 		;;
 	merge)
+		ALLOW_PASSWORD_PROMPT=''
 		shift
 		git_merge "$@"
 		exit $?
 		;;
 	pre_commit)
+		ALLOW_PASSWORD_PROMPT=''
 		shift
 		git_pre_commit "$@"
 		exit $?
@@ -1685,6 +1694,7 @@ readonly GIT_DIRTY_FILES_BEFORE_INIT="$(count_dirty_files)"
 # perform function calls to configure transcrypt
 get_cipher
 get_password
+set_password_env_for_context "$password" "$CONTEXT_CONFIG_GROUP"
 
 if [[ $rekey ]] && [[ $interactive ]]; then
 	confirm_rekey
