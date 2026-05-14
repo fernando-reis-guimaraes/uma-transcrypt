@@ -50,7 +50,8 @@ load_password() {
 	# Prompt only for direct transcrypt calls, not for git filter subprocesses
 	if [[ ! $password ]] && [[ ${ALLOW_PASSWORD_PROMPT:-} ]]; then
 		printf 'Password: ' >&2
-		read -r password
+		read -r -s password
+		printf '\n' >&2
 		[[ $password ]] || die 1 'no password was specified; set %s or TRANSCRYPT_PASSWORD' "$context_envvar"
 	fi
 
