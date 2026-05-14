@@ -52,7 +52,6 @@ load_password() {
 		printf 'Password: ' >&2
 		read -r -s password
 		printf '\n' >&2
-		[[ $password ]] || die 1 'no password was specified; set %s or TRANSCRYPT_PASSWORD' "$context_envvar"
 	fi
 
 	[[ $password ]] || die 1 'no password was specified; set %s or TRANSCRYPT_PASSWORD' "$context_envvar"
