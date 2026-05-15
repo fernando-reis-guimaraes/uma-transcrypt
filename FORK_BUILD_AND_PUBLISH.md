@@ -90,7 +90,7 @@ class UmaTranscrypt < Formula
   end
 
   test do
-    assert_match "transcrypt", shell_output("#{bin}/uma-transcrypt --version")
+    assert_match "uma-transcrypt", shell_output("#{bin}/uma-transcrypt --version")
   end
 end
 ```
