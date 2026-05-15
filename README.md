@@ -30,6 +30,7 @@ uma-transcrypt --context=super-secret --display
 For fork-specific instructions (local validation, usage flow, and package publishing guidance including Homebrew and Arch PKGBUILD), see:
 
 - [FORK_BUILD_AND_PUBLISH.md](FORK_BUILD_AND_PUBLISH.md)
+- [QUICK-START.md](QUICK-START.md)
 
 ## Original upstream documentation
 
