@@ -11,6 +11,7 @@ From the repository root:
 ```bash
 # Lint
 shellcheck transcrypt
+shellcheck uma-transcrypt
 
 # Tests (same as CI)
 /tmp/bats-core/bin/bats tests/
@@ -29,13 +30,13 @@ bash /tmp/bats-core-repo/install.sh /tmp/bats-core
 Option A (run directly from repo):
 
 ```bash
-./transcrypt --help
+./uma-transcrypt --help
 ```
 
 Option B (install in PATH):
 
 ```bash
-sudo install -m 0755 transcrypt /usr/local/bin/transcrypt
+sudo install -m 0755 uma-transcrypt /usr/local/bin/uma-transcrypt
 ```
 
 With this fork, set password(s) via env vars:
@@ -51,8 +52,8 @@ export TRANSCRYPT_PASSWORD_SUPER_SECRET='another password'
 Then initialize/use as usual:
 
 ```bash
-transcrypt --cipher=aes-256-cbc --yes
-transcrypt --display
+uma-transcrypt --cipher=aes-256-cbc --yes
+uma-transcrypt --display
 ```
 
 ## 3) Publish this fork
@@ -84,12 +85,12 @@ class UmaTranscrypt < Formula
   license "MIT"
 
   def install
-    bin.install "transcrypt"
+    bin.install "uma-transcrypt"
     man1.install "man/transcrypt.1"
   end
 
   test do
-    assert_match "transcrypt", shell_output("#{bin}/transcrypt --version")
+    assert_match "transcrypt", shell_output("#{bin}/uma-transcrypt --version")
   end
 end
 ```

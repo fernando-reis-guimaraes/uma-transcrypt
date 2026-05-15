@@ -10,7 +10,7 @@ Compared to upstream, this fork:
 
 - loads passwords from environment variables instead of reading/storing them in local git config
 - supports context-specific variables using `TRANSCRYPT_PASSWORD_<CONTEXT>`
-- prompts for password at runtime (silent input) when env vars are unset for direct `transcrypt` usage
+- prompts for password at runtime (silent input) when env vars are unset for direct `uma-transcrypt` usage
 - avoids persisting passwords in `.git/config`
 
 Examples:
@@ -18,11 +18,11 @@ Examples:
 ```bash
 # default context
 export TRANSCRYPT_PASSWORD='abc 123'
-transcrypt --display
+uma-transcrypt --display
 
 # named context: super-secret
 export TRANSCRYPT_PASSWORD_SUPER_SECRET='321cba'
-transcrypt --context=super-secret --display
+uma-transcrypt --context=super-secret --display
 ```
 
 ## Build, validate, and use this fork

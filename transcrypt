@@ -31,6 +31,10 @@ readonly DEFAULT_CIPHER='aes-256-cbc'
 # context name must match this regexp to ensure it is safe for git config and attrs
 readonly CONTEXT_REGEX='[a-z](-?[a-z0-9])*'
 
+# command name used in user-facing output
+COMMAND_NAME=${TRANSCRYPT_COMMAND_NAME:-$(basename "$0")}
+readonly COMMAND_NAME
+
 ##### FUNCTIONS
 
 # load encryption password
@@ -142,7 +146,7 @@ warn() {
 	local fmt="$1"
 	shift
 	# shellcheck disable=SC2059
-	printf "transcrypt: $fmt\n" "$@" >&2
+	printf "%s: $fmt\n" "$COMMAND_NAME" "$@" >&2
 }
 
 # print a message to stderr and exit with either
@@ -1263,7 +1267,7 @@ list_contexts() {
 # print this script's usage message to stderr
 usage() {
 	cat <<-EOF >&2
-		usage: transcrypt [-c CIPHER] [-p PASSWORD] [-h]
+		usage: $COMMAND_NAME [-c CIPHER] [-p PASSWORD] [-h]
 	EOF
 }
 
@@ -1271,10 +1275,10 @@ usage() {
 help() {
 	cat <<-EOF
 		NAME
-		     transcrypt -- transparently encrypt files within a git repository
+		     $COMMAND_NAME -- transparently encrypt files within a git repository
 
 		SYNOPSIS
-		     transcrypt [options...]
+		     $COMMAND_NAME [options...]
 
 		DESCRIPTION
 
@@ -1601,7 +1605,7 @@ while [[ "${1:-}" != '' ]]; do
 		gpg_import_file=${1#*=}
 		;;
 	-v | --version)
-		printf 'transcrypt %s\n' "$VERSION"
+		printf '%s %s\n' "$COMMAND_NAME" "$VERSION"
 		exit 0
 		;;
 	-h | --help | -\?)
