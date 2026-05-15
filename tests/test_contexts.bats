@@ -8,6 +8,8 @@ SUPER_SECRET_CONTENT_ENC="U2FsdGVkX1+dAkIV/LAKXMmqjDNOGoOVK8Rmhw9tUnbR4dwBDglpkX
 
 function setup {
   pushd "$BATS_TEST_DIRNAME" || exit 1
+  export TRANSCRYPT_PASSWORD='abc 123'
+  export TRANSCRYPT_PASSWORD_SUPER_SECRET='321cba'
   init_git_repo
   init_transcrypt
 
@@ -16,6 +18,8 @@ function setup {
 }
 
 function teardown {
+  unset TRANSCRYPT_PASSWORD
+  unset TRANSCRYPT_PASSWORD_SUPER_SECRET
   cleanup_all
   rm -f "$BATS_TEST_DIRNAME"/super_sensitive_file
   popd || exit 1
@@ -62,7 +66,8 @@ function teardown {
 
   [[ $(git config --get transcrypt.version) = "$VERSION" ]]
   [[ $(git config --get transcrypt.super-secret.cipher) = "aes-256-cbc" ]]
-  [[ $(git config --get transcrypt.super-secret.password) = "321cba" ]]
+  run git config --get transcrypt.super-secret.password
+  [ "$status" -ne 0 ]
 
   # Use --git-common-dir if available (Git post Nov 2014) otherwise --git-dir
   # shellcheck disable=SC2016

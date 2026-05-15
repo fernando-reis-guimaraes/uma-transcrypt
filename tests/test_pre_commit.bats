@@ -14,6 +14,25 @@ load "$BATS_TEST_DIRNAME/_test_helper.bash"
   [ "${lines[1]}" = '# Transcrypt pre-commit hook: fail if secret file in staging lacks the magic prefix "Salted" in B64' ]
 }
 
+@test "pre-commit: uma-transcrypt init installs working pre-commit hook" {
+  run "$BATS_TEST_DIRNAME"/../transcrypt --uninstall --yes
+  [ "$status" -eq 0 ]
+
+  run "$BATS_TEST_DIRNAME"/../uma-transcrypt --cipher=aes-256-cbc --password='abc 123' --yes
+  [ "$status" -eq 0 ]
+
+  [ -f .git/hooks/pre-commit ]
+  [ -f .git/hooks/pre-commit-crypt ]
+
+  echo "Secret stuff" > sensitive_file
+  encrypt_named_file sensitive_file
+
+  echo " and more secrets" >> sensitive_file
+  git add sensitive_file
+  run git commit -m "Added more via uma-transcrypt init"
+  [ "$status" -eq 0 ]
+}
+
 @test "pre-commit: permit commit of encrypted file with encrypted content" {
   echo "Secret stuff" > sensitive_file
   encrypt_named_file sensitive_file
